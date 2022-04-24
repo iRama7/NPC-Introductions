@@ -1,0 +1,34 @@
+#Villager talk system plays sounds of villagers to simulate a chat with the NPC
+villager-talk:
+  man-talk:
+    #It will pick one sound of this list every second while talking with an NPC
+    sounds:
+      - ENTITY_VILLAGER_YES
+      - ENTITY_VILLAGER_AMBIENT
+    pitch: 0.8
+  woman-talk:
+    #It will pick one sound of this list every second while talking with an NPC
+    sounds:
+      - ENTITY_VILLAGER_YES
+      - ENTITY_VILLAGER_AMBIENT
+    pitch: 2
+
+# List of introductions
+introductions:
+  # ID of the NPC
+  0:
+    #Set the villager talk type for this NPC Introduction
+    talk-type: man-talk #NONE to disable
+    action:
+      command: "menu"
+      type: PLAYER #CONSOLE/PLAYER
+      sound: BLOCK_LEVER_CLICK #NONE to disable
+      sound-pitch: 1
+    messages:
+      - "&e[NPC] &6Jerry&e: &fHello! this is a test message"
+      - "&e[NPC] &6Jerry&e: &fI can use %player% as variable!"
+    #Sound to play for each message above
+    sound: ENTITY_EXPERIENCE_ORB_PICKUP #NONE to disable
+    sound-pitch: 1
+    #The interval in ticks between messages
+    interval: 40

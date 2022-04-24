@@ -1,0 +1,8 @@
+name: NPCIntroductions
+version: '${project.version}'
+main: rama.npcintroductions.NPCIntroductions
+soft-depend: [ Citizens ]
+authors: [ ImRama ]
+description: First click messages for your NPCS
+commands:
+  npci:
