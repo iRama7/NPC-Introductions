@@ -18,6 +18,7 @@ introductions:
   # ID of the NPC
   0:
     #Set the villager talk type for this NPC Introduction
+    first-time: true #Should the introduction be displayed only the first time they click the NPC?
     talk-type: man-talk #NONE to disable
     action:
       command: "menu"

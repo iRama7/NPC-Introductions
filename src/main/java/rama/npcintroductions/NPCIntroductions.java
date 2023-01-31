@@ -27,15 +27,15 @@ public final class NPCIntroductions extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
-        //new UpdateChecker(this, 99981).getVersion(version -> {
-            //if (this.getDescription().getVersion().equals(version)) {
-                //sendLog("&eYou are using the latest version.");
-            //} else {
-                //sendLog("&eThere is a new update available!");
-                //sendLog("&eYour current version: "+"&c"+plugin.getDescription().getVersion());
-                //sendLog("&eLatest version: "+"&a"+version);
-            //}
-       //});
+        new UpdateChecker(this, 105775).getVersion(version -> {
+            if (this.getDescription().getVersion().equals(version)) {
+                sendLog("&eYou are using the latest version.");
+            } else {
+                sendLog("&eThere is a new update available!");
+                sendLog("&eYour current version: "+"&c"+plugin.getDescription().getVersion());
+                sendLog("&eLatest version: "+"&a"+version);
+            }
+       });
         this.saveDefaultConfig();
         createDataFile();
         Bukkit.getPluginManager().registerEvents(new NPCListener(), this);
@@ -43,8 +43,11 @@ public final class NPCIntroductions extends JavaPlugin {
         this.getCommand("npci").setExecutor(tabExecutor);
         this.getCommand("npci").setTabCompleter(tabExecutor);
         if(getServer().getPluginManager().getPlugin("Citizens") == null){
-            sendLog("Disabling due to Citizens dependency not found!");
-            getServer().getPluginManager().disablePlugin(this);
+            sendLog("Citizens dependency not found!");
+        }
+        if(getServer().getPluginManager().getPlugin("ServersNPC") != null){
+            sendLog("Enabling ZNPCS hook!");
+            Bukkit.getPluginManager().registerEvents(new ZNPCListener(), this);
         }
     }
 
@@ -104,9 +107,11 @@ public final class NPCIntroductions extends JavaPlugin {
 
         List<String> uuids = getData().getStringList(String.valueOf(i));
         Boolean playerAlreadyClicked = uuids.contains(p.getUniqueId().toString());
+
+        Boolean firstTime = config.getBoolean("introductions."+i+".first-time");
         //variables
 
-        if(playerAlreadyClicked){
+        if(playerAlreadyClicked && firstTime){
             executeAction(action_type, p, action_command, action_sound, action_sound_pitch, i);
             return;
         }
