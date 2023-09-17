@@ -17,6 +17,8 @@ villager-talk:
 introductions:
   # ID of the NPC
   0:
+    cooldown: 20 #Cooldown, in ticks, for clicking.
+    cooldown-message: "&eDon't click too fast!"
     #Set the villager talk type for this NPC Introduction
     first-time: true #Should the introduction be displayed only the first time they click the NPC?
     talk-type: man-talk #NONE to disable

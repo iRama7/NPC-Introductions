@@ -144,6 +144,9 @@ public final class NPCIntroductions extends JavaPlugin {
 
     public static void updateData(int i, Player p){
         List<String> uuids = getData().getStringList(String.valueOf(i));
+        if(getData().getStringList(String.valueOf(i)).contains(p.getUniqueId().toString())){
+            return;
+        }
         uuids.add(p.getUniqueId().toString());
         getData().set(String.valueOf(i), uuids);
         try {
@@ -177,12 +180,12 @@ public final class NPCIntroductions extends JavaPlugin {
         }.runTaskTimerAsynchronously(plugin, 0, (long) interval);
     }
     public static void executeAction(String action_type, Player p, String action_command, Sound action_sound, long action_sound_pitch, int i){
-        if(action_type.equalsIgnoreCase("PLAYER")){
+        if(action_type.equalsIgnoreCase("PLAYER") && action_command != null && !action_command.isEmpty()){
             p.performCommand(action_command);
             if(action_sound != null){
                 p.playSound(p.getLocation(), action_sound, 100, action_sound_pitch);
             }
-        }else if(action_type.equalsIgnoreCase("CONSOLE")){
+        }else if(action_type.equalsIgnoreCase("CONSOLE") && action_command != null && !action_command.isEmpty()){
             Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), action_command);
             if(action_sound != null){
                 p.playSound(p.getLocation(), action_sound, 100, action_sound_pitch);
