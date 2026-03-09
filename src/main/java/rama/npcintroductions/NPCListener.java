@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 
 import static rama.npcintroductions.NPCIntroductions.*;
@@ -15,9 +16,14 @@ import static rama.npcintroductions.NPCIntroductions.*;
 public class NPCListener implements Listener {
 
     HashMap<Player, Boolean> cd = new HashMap<>();
+    private NPCIntroductions main;
+
+    public NPCListener(NPCIntroductions main){
+        this.main = main;
+    }
 
     @EventHandler
-    public void NpcClickListener(NPCRightClickEvent e){
+    public void NpcClickListener(NPCRightClickEvent e) throws SQLException {
         Player clicker = e.getClicker();
         NPC clickedNPC = e.getNPC();
         int clickedNPCid = clickedNPC.getId();
@@ -27,7 +33,7 @@ public class NPCListener implements Listener {
                 long cooldown = plugin.getConfig().getLong("introductions." + i + ".cooldown");
 
                     if(cd.get(clicker) == null || !cd.get(clicker)) {
-                        playIntroduction(i, clicker);
+                        main.playIntroduction(i, clicker);
                         startCooldown(clicker, cooldown);
                     }else{
                         String cdMessage = plugin.getConfig().getString("introductions." + i + ".cooldown-message");

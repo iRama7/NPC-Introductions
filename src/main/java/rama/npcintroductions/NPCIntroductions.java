@@ -15,6 +15,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,6 +30,8 @@ public final class NPCIntroductions extends JavaPlugin {
     public static BukkitTask talkTask;
     private Boolean PaPiHook = false;
 
+    private Database database;
+
     @Override
     public void onEnable() {
         plugin = this;
@@ -42,9 +45,13 @@ public final class NPCIntroductions extends JavaPlugin {
             }
        });
         this.saveDefaultConfig();
-        createDataFile();
-        Bukkit.getPluginManager().registerEvents(new NPCListener(), this);
-        TabExecutor tabExecutor = new Commands();
+        try {
+            createDatabase();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        Bukkit.getPluginManager().registerEvents(new NPCListener(this), this);
+        TabExecutor tabExecutor = new Commands(this);
         this.getCommand("npci").setExecutor(tabExecutor);
         this.getCommand("npci").setTabCompleter(tabExecutor);
         if(getServer().getPluginManager().getPlugin("Citizens") == null){
@@ -64,27 +71,21 @@ public final class NPCIntroductions extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage(prefix + ChatColor.translateAlternateColorCodes('&', message));
     }
 
-    public static void reloadData() throws IOException {
-        Data.save(dataFile);
-        Data = YamlConfiguration.loadConfiguration(dataFile);
+    public void createDatabase() throws SQLException {
+
+            try {
+                database = new Database(getDataFolder().getAbsolutePath() + "/data.db");
+                sendLog("&aDatabase created successfully.");
+            } catch (SQLException e) {
+                sendLog("&4[ERROR] &cCould not create the database: &f" + e.getMessage());
+                getServer().getPluginManager().disablePlugin(this);
+                throw new RuntimeException(e);
+            }
+
+            database.updateFromFile();
+
     }
-    public static FileConfiguration getData(){
-        return Data;
-    }
-    public void createDataFile(){
-        dataFile = new File(getDataFolder(), "data.yml");
-        if(!dataFile.exists()){
-            dataFile.getParentFile().mkdirs();
-            saveResource("data.yml", false);
-        }
-        Data = new YamlConfiguration();
-        try{
-            Data.load(dataFile);
-        }catch(IOException | InvalidConfigurationException e){
-            e.printStackTrace();
-        }
-    }
-    public static void playIntroduction(int i, Player p){
+    public void playIntroduction(int i, Player p) throws SQLException {
         FileConfiguration config = plugin.getConfig();
         //variables
         String talk_type = config.getString("introductions."+i+".talk-type");
@@ -113,13 +114,12 @@ public final class NPCIntroductions extends JavaPlugin {
         long message_sound_pitch = config.getInt("introductions."+i+".sound-pitch");
         int interval = config.getInt("introductions."+i+".interval");
 
-        List<String> uuids = getData().getStringList(String.valueOf(i));
-        Boolean playerAlreadyClicked = uuids.contains(p.getUniqueId().toString());
+        Boolean playerFirstTime = database.firstTime(i, p);
 
-        Boolean firstTime = config.getBoolean("introductions."+i+".first-time");
+        Boolean firstTimeEnabled = config.getBoolean("introductions."+i+".first-time");
         //variables
 
-        if(playerAlreadyClicked && firstTime){
+        if(!playerFirstTime && firstTimeEnabled){
             executeAction(action_type, p, action_commands_replaced, action_sound, action_sound_pitch, i);
             return;
         }
@@ -129,7 +129,7 @@ public final class NPCIntroductions extends JavaPlugin {
             startNpcTalk(talk_type, p, interval, messages.size());
         }
         Sound finalAction_sound = action_sound;
-        updateData(i, p);
+        database.addPlayer(i, p);
         new BukkitRunnable() {
             int counter = 0;
             @Override
@@ -155,19 +155,7 @@ public final class NPCIntroductions extends JavaPlugin {
         }.runTaskTimer(plugin, 0L, interval);
     }
 
-    public static void updateData(int i, Player p){
-        List<String> uuids = getData().getStringList(String.valueOf(i));
-        if(getData().getStringList(String.valueOf(i)).contains(p.getUniqueId().toString())){
-            return;
-        }
-        uuids.add(p.getUniqueId().toString());
-        getData().set(String.valueOf(i), uuids);
-        try {
-            reloadData();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
+
     public static void startNpcTalk(String talk_type, Player p, double interval, int size){
         //variables
         List<String> sounds = plugin.getConfig().getStringList("villager-talk."+talk_type+".sounds");
@@ -240,5 +228,9 @@ public final class NPCIntroductions extends JavaPlugin {
             matcher = pattern.matcher(s);
         }
         return ChatColor.translateAlternateColorCodes('&', s);
+    }
+
+    public Database getDatabase(){
+        return database;
     }
 }

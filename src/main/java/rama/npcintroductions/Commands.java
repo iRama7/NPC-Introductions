@@ -9,13 +9,21 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static rama.npcintroductions.NPCIntroductions.*;
+
 
 public class Commands implements TabExecutor {
+
+    NPCIntroductions main;
+
+    public Commands(NPCIntroductions main){
+        this.main = main;
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if(sender.hasPermission("npci.admin")){
@@ -24,12 +32,7 @@ public class Commands implements TabExecutor {
                 sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e&lNPCIntroductions &f/npci resetData [all/player name]"));
             }else{
                 if(args[0].equals("reload")){
-                    plugin.reloadConfig();
-                    try {
-                        reloadData();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    main.reloadConfig();
                     sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e&lNPCIntroductions &fYou have successfully reloaded the plugin files."));
                 }
                 if(args[0].equals("resetData")){
@@ -37,18 +40,13 @@ public class Commands implements TabExecutor {
                         sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e&lNPCIntroductions &cWrong arguments!"));
                     }else{
                         if(args[1].equalsIgnoreCase("all")){
-                            for(String ID : getData().getKeys(false)){
-                                List<String> uuids = getData().getStringList(ID);
-                                for (int i = 0; i < uuids.size(); i++){
-                                    uuids.remove(uuids.get(i));
-                                    getData().set(String.valueOf(i), uuids);
-                                    try {
-                                        reloadData();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
+
+                            try {
+                                main.getDatabase().resetPlayer(true, null);
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
                             }
+
                             sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e&lNPCIntroductions &fYou have successfully reset the introductions data for all players."));
                         }else{
                             if(Bukkit.getPlayer(args[1]) == null){
@@ -56,15 +54,10 @@ public class Commands implements TabExecutor {
                                 return false;
                             }
                             Player player = Bukkit.getPlayer(args[1]);
-                            for(String ID : getData().getKeys(false)){
-                                List<String> uuids = getData().getStringList(ID);
-                                uuids.remove(player.getUniqueId().toString());
-                                getData().set(ID, uuids);
-                                try {
-                                    reloadData();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                            try {
+                                main.getDatabase().resetPlayer(true, player.getUniqueId().toString());
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
                             }
                             sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e&lNPCIntroductions &fYou have successfully reset the introductions data for "+player.getName()+"."));
                         }
